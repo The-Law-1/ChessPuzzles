@@ -250,8 +250,9 @@ pub fn find_tactical_positions(moves: &[String], engine: &mut Child) -> Vec<Puzz
         puzzles.push(puzzle);
       }
 
+      let max_mate_depth = 7;
       // * if instead we have a positive mate, we can force a mate
-      if eval_after.mate_in > 0 && eval_after.mate_in <= max_puzzle_length as i32 {
+      if eval_after.mate_in > 0 && eval_after.mate_in <= max_mate_depth as i32 {
         let move_coords = utils::chess_move_to_coordinate_notation(&chess_move);
 
         if prev_eval.pv[0] != move_coords {
