@@ -60,13 +60,16 @@ pub fn is_only_winning_move(evals : &Vec<Evaluation>, current_fen : String) -> b
 
   // loop through the rest of the evaluations
   for eval in evals.iter().skip(1) {
+    if evals[0].mate_in != -1 && (eval.mate_in == -1 || eval.mate_in > evals[0].mate_in) {
+      // if the best move is a better mate in X, continue
+      continue;
+    }
 
     let less_winning_threshold = 0.5;
-    // consider it way worse, if it's 1 whole pawn worse
     let score_diff = (evals[0].score - eval.score).abs();
-    
-    // if one of them is a mate or another technical move, others_losing is false
-    if score_diff < less_winning_threshold || (evals[0].mate_in != -1 && eval.mate_in == evals[0].mate_in) {
+
+    // if no PV leads to mate, compare scores
+    if (evals[0].mate_in == -1 && eval.mate_in == -1) && score_diff < less_winning_threshold {
       println!("Current fen: {}", current_fen);
       println!("Failed because of: {} or {}", eval.score, eval.mate_in);
       println!("And best move: {} or {}", evals[0].score, evals[0].mate_in);

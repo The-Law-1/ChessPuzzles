@@ -60,6 +60,7 @@ fn main() -> std::io::Result<()> {
     // open a file for writing
     let mut file = OpenOptions::new()
       .write(true)
+      .append(true)
       .create(true)
       .open("output.csv")?;
 

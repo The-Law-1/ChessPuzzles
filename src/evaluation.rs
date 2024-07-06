@@ -210,12 +210,12 @@ pub fn find_tactical_positions(moves: &[String], engine: &mut Child) -> Vec<Puzz
       println!("Only winning move detected: {}", eval_after.pv[0]);
 
       // TODO check if the move was missed by the player, to eliminate trivial puzzles
-
+      
+      let max_puzzle_length = 5;
 
       // * if the evaluation is positive, it means we can win material
       if eval_after.score > 0.0 {
         
-        let max_puzzle_length = 5;
         // look for a sequence of moves that lead to (the biggest) material gain about equal to the evaluation
         // * while staying under the max depth
         let puzzle_variation = explore_variation(&fen_after, &eval_after.pv, colour_to_play, eval_after.score, max_puzzle_length);
@@ -237,7 +237,7 @@ pub fn find_tactical_positions(moves: &[String], engine: &mut Child) -> Vec<Puzz
         println!("Last material winning move: {}", puzzle_variation.0.to_string());
 
         let puzzle : Puzzle = Puzzle {
-          puzzle_idx: 0,
+          puzzle_idx: puzzles.len() as i128,
           game_idx: 0,
           start_pos: puzzle_start_pos,
           moves: puzzle_moves,
@@ -251,22 +251,20 @@ pub fn find_tactical_positions(moves: &[String], engine: &mut Child) -> Vec<Puzz
       }
 
       // * if instead we have a positive mate, we can force a mate
-      if eval_after.mate_in > 0 {
+      if eval_after.mate_in > 0 && eval_after.mate_in <= max_puzzle_length as i32 {
         let move_coords = utils::chess_move_to_coordinate_notation(&chess_move);
 
         if prev_eval.pv[0] != move_coords {
           // let startPos = fen_before;
-          let start_pos = fen_before;
-          let moves = prev_eval.pv.clone();
+          let start_pos = fen_after.clone();
+          let moves = eval_after.pv.clone();
 
           let task = if colour_to_play == chess::Color::White { "White to force mate" } else { "Black to force mate" };
 
           println!("Player missed mate, found puzzle: {}, {}", start_pos.to_string(), moves.join(" "));
 
-          // TODO discard mate_in puzzles > max_puzzle_length
-
           let puzzle : Puzzle = Puzzle {
-            puzzle_idx: 0,
+            puzzle_idx: puzzles.len() as i128,
             game_idx: 0,
             start_pos,
             moves: moves.clone(),
