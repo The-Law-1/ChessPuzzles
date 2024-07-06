@@ -158,7 +158,11 @@ pub fn find_tactical_positions(moves: &[String], engine: &mut Child) -> Vec<Puzz
     println!("Analyzing move: {}", mv);
     // TODO move forward to skip opening moves
 
-    let mv = mv.replace("=", ""); // Remove the '=' sign from pawn promotions
+    let mut mv = mv.replace("=", ""); // Remove the '=' sign from pawn promotions
+
+    // ! handle castling with check O-O-O+ and O-O+
+    mv = mv.replace("O-O-O+", "O-O-O");
+    mv = mv.replace("O-O+", "O-O");
 
     // if it's the game's result, break
     if mv == "1-0" || mv == "0-1" || mv == "1/2-1/2" {

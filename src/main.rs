@@ -33,11 +33,17 @@ fn main() -> std::io::Result<()> {
 
   let games_data : Vec<structs::GameInfo> = parser::parse_csv_games("./scripts/The_Lawx_games.csv");
 
+  // write what games you analyzed
+  let mut parsed_games_file = OpenOptions::new()
+    .write(true)
+    .create(true)
+    .open("parsed_games.csv")?;
+
   // run the engine
   let mut engine = evaluation::start_stockfish();
 
-  let start_at = 74;
-  let max_games = 200;
+  let start_at = 89;
+  let end_at = 200;
 
   let mut game_idx = 0;
 
@@ -48,7 +54,7 @@ fn main() -> std::io::Result<()> {
       continue;
     }
 
-    if game.id >= max_games {
+    if game.id >= end_at {
       break;
     }
     println!("Game: {}\n Number: {}", game.name, game_idx);
@@ -88,21 +94,18 @@ fn main() -> std::io::Result<()> {
     println!("Wrote to puzzles file\n");
 
     // write to a file that contains the ids of the parsed games
+    let line = format!("{}, ", game_idx);
+    if let Err(e) = parsed_games_file.write_fmt(format_args!("{}", line)){
+      eprintln!("Failed to write to file: {}", e);
+    }
 
     game_idx += 1;
   }
 
 
-  // write what games you analyzed
-  let mut parsed_games_file = OpenOptions::new()
-    .write(true)
-    .create(true)
-    .open("parsed_games.csv")?;
 
-  let line = format!("{}, {}\n", start_at, game_idx);
-  if let Err(e) = parsed_games_file.write_fmt(format_args!("{}", line)){
-    eprintln!("Failed to write to file: {}", e);
-  }
+
+
 
 
 
