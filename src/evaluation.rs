@@ -49,7 +49,6 @@ fn evaluate_position(fen: &str, engine: &mut Child) -> Vec<Evaluation> {
       if line.starts_with("bestmove") {
         break;
       }
-      // last line:
       if line.contains(&("info depth ".to_string() + &depth.to_string())) {
         if evaluations.len() < eval_idx + 1 {
           evaluations.insert(0, Evaluation {
@@ -85,9 +84,9 @@ fn evaluate_position(fen: &str, engine: &mut Child) -> Vec<Evaluation> {
                                 .unwrap()
                                 .parse()
                                 .unwrap();
-          // huge eval so that it is always seen as a better move
-          evaluation = if mate_in > 0 { 10000 - mate_in } else { -10000 - mate_in } as f64;
-          evaluations[0].score = evaluation;
+          
+          // no need to give an eval, our algo will pick up the mate_in value
+          evaluations[0].score = 0.0;
           evaluations[0].mate_in = mate_in;
         }
 
@@ -160,7 +159,7 @@ pub fn find_tactical_positions(moves: &[String], engine: &mut Child) -> Vec<Puzz
     let colour_to_play = board.side_to_move();
 
     // check the final evaluation of the position, is the only one that matters
-    let only_winning_move = utils::is_only_winning_move(&evals_after, tactical_move_threshold);
+    let only_winning_move = utils::is_only_winning_move(&evals_after, tactical_move_threshold, fen_after.clone());
 
     // println!("Was best move the only winning move: {}", only_winning_move);
 

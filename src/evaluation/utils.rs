@@ -49,7 +49,7 @@ pub fn convert_to_san(move_str: &str) -> ChessMove {
   return chess_move;
 }
 
-pub fn is_only_winning_move(evals : &Vec<Evaluation>, winning_move_threshold : f64) -> bool {
+pub fn is_only_winning_move(evals : &Vec<Evaluation>, winning_move_threshold : f64, current_fen : String) -> bool {
   let mut is_winning = false;
   let mut others_losing = false;
 
@@ -60,13 +60,22 @@ pub fn is_only_winning_move(evals : &Vec<Evaluation>, winning_move_threshold : f
 
   if evals[0].score.abs() >= winning_move_threshold || evals[0].mate_in > 0 {
     is_winning = true;
+  } else {
+    return false;
   }
 
   // loop through the rest of the evaluations
   for eval in evals.iter().skip(1) {
+
+    let less_winning_threshold = 1.0;
+    // consider it way worse, if it's 1 whole pawn worse
+    let score_diff = (evals[0].score - eval.score).abs();
+    
     // if one of them is a mate or another technical move, others_losing is false    
-    if eval.score.abs() >= winning_move_threshold || (evals[0].mate_in != -1 && eval.mate_in == evals[0].mate_in) {
+    if score_diff < less_winning_threshold || (evals[0].mate_in != -1 && eval.mate_in == evals[0].mate_in) {
+      println!("Current fen: {}", current_fen);
       println!("Failed because of: {} or {}", eval.score, eval.mate_in);
+      println!("And best move: {} or {}", evals[0].score, evals[0].mate_in);
       others_losing = false;
     }
   }

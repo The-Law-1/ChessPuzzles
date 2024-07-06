@@ -26,14 +26,10 @@ fn main() -> std::io::Result<()> {
 
   let games_data : Vec<structs::GameInfo> = parser::parse_csv_games("./chess-games/data/2016_CvC.csv");
 
-  let games_file = OpenOptions::new()
-    .write(true)
-    .open("./chess-games/data/2016_CvC.csv")?;
-
   // run the engine
   let mut engine = evaluation::start_stockfish();
 
-  let start_at = 0;
+  let start_at = 10;
   let max_games = 10;
 
   let mut game_idx = 0;
