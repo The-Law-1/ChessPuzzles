@@ -23,11 +23,11 @@ pub fn material_points(board: &Board, color: chess::Color) -> i16 {
           }
       }
   }
-  return sum;
-  // match color {
-  //   chess::Color::White => return sum,
-  //   chess::Color::Black => return -sum,
-  // }
+  // return sum;
+  match color {
+    chess::Color::White => return sum,
+    chess::Color::Black => return -sum,
+  }
 }
 
 pub fn convert_to_san(move_str: &str) -> ChessMove {

@@ -66,7 +66,7 @@ fn main() -> std::io::Result<()> {
         
     if file.metadata()?.len() == 0 {
       println!("File is empty, writing headers");
-      let _ = file.write_all(b"PuzzleIdx, GameIdx, Game, StartPos, Moves, MateIn, Task\n");
+      let _ = file.write_all(b"PuzzleIdx, GameIdx, Game, StartPos, Moves, EndMove, MateIn, Task\n");
     }
 
     println!("Calling find_tactical_positions\n");

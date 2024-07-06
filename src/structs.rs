@@ -22,6 +22,7 @@ pub struct Puzzle {
   pub game_idx: i128,
   pub start_pos: String,
   pub moves: Vec<String>,
+  pub end_move: String,
   pub mate_in: i32,
 
   pub task: String, 

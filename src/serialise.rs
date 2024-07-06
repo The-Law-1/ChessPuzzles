@@ -14,7 +14,7 @@ pub fn write_puzzles(file: &mut File, puzzles: Vec<Puzzle>) -> i16 {
       moves.push_str(&mv);
       moves.push_str(" ");
     }
-    let line = format!("{}, {}, {}, {}, {}, {}\n", puzzle.puzzle_idx, puzzle.game_idx, puzzle.start_pos, moves, puzzle.mate_in, puzzle.task);
+    let line = format!("{}, {}, {}, {}, {}, {}, {}\n", puzzle.puzzle_idx, puzzle.game_idx, puzzle.start_pos, moves, puzzle.end_move, puzzle.mate_in, puzzle.task);
 
     if let Err(e) = write_to_file(file, &line) {
       eprintln!("Failed to write to file: {}", e);

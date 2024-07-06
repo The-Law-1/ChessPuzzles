@@ -40,7 +40,7 @@ fn evaluate_position(fen: &str, engine: &mut Child) -> Vec<Evaluation> {
   writeln!(stdin, "go depth {}", depth).expect("Failed to write to stdin");
 
   let mut evaluations : Vec<Evaluation> = Vec::new();
-  let mut eval_idx = 0;
+  let mut eval_idx: usize = 0;
   
   let reader = BufReader::new(stdout);
     let mut evaluation = 0.0;
@@ -51,7 +51,7 @@ fn evaluate_position(fen: &str, engine: &mut Child) -> Vec<Evaluation> {
       }
       if line.contains(&("info depth ".to_string() + &depth.to_string())) {
         if evaluations.len() < eval_idx + 1 {
-          evaluations.insert(0, Evaluation {
+          evaluations.push(Evaluation {
             score: 0.0,
             pv: Vec::new(),
             mate_in: -1
@@ -60,7 +60,7 @@ fn evaluate_position(fen: &str, engine: &mut Child) -> Vec<Evaluation> {
 
         if line.contains(" pv ") {
           let pv = line.split(" pv ").nth(1).unwrap();
-          evaluations[0].pv = pv.split_whitespace().map(|s| s.to_string()).collect();
+          evaluations[eval_idx].pv = pv.split_whitespace().map(|s| s.to_string()).collect();
         }
 
         if line.contains("score cp") {
@@ -73,7 +73,7 @@ fn evaluate_position(fen: &str, engine: &mut Child) -> Vec<Evaluation> {
                                 .parse()
                                 .unwrap();
           evaluation = score as f64 / 100.0;
-          evaluations[0].score = evaluation;
+          evaluations[eval_idx].score = evaluation;
         }
         if line.contains("score mate") {
           let mate_in: i32 = line.split("score mate")
@@ -86,8 +86,8 @@ fn evaluate_position(fen: &str, engine: &mut Child) -> Vec<Evaluation> {
                                 .unwrap();
           
           // no need to give an eval, our algo will pick up the mate_in value
-          evaluations[0].score = 0.0;
-          evaluations[0].mate_in = mate_in;
+          evaluations[eval_idx].score = 0.0;
+          evaluations[eval_idx].mate_in = mate_in;
         }
 
         eval_idx += 1;
@@ -98,34 +98,45 @@ fn evaluate_position(fen: &str, engine: &mut Child) -> Vec<Evaluation> {
 
 fn explore_variation(start_pos: &String, moves: &Vec<String>, color: chess::Color, position_score: f64, max_depth : i16) -> (ChessMove, Vec<ChessMove>) {
   let mut best_moves = Vec::new();
-  let mut best_move = ChessMove::default();
+  let mut last_winning_move = ChessMove::default();
   let mut board = Board::from_str(&start_pos).unwrap();
   let mut best_material_gain = 0;
 
   let opposing_color = if color == chess::Color::White { chess::Color::Black } else { chess::Color::White };
 
+  let win_material_threshold = 2.5; // * we consider this a material-winning move
+
+  let mut total_material_won = 0.0;
+
   for mv in moves {
     if (best_moves.len() as i16) >= max_depth {
-      best_move = ChessMove::default();
-      return (best_move, Vec::new());
+
+      // if at the end of the sequence, we haven't won enough material, skip the puzzle
+      if total_material_won < win_material_threshold {
+        last_winning_move = ChessMove::default();
+        return (last_winning_move, Vec::new());
+      } else {
+        return (last_winning_move, best_moves);
+      }
     }
 
-    let static_eval_before = utils::material_points(&board, opposing_color);
+    // let static_eval_before = utils::material_points(&board, opposing_color);
     let chess_move = utils::convert_to_san(mv);
     board = board.make_move_new(chess_move);
-    let static_eval_after = utils::material_points(&board, opposing_color);
+    let static_eval_after = utils::material_points(&board, color);
 
-    if board.side_to_move() != color {
-        let difference = (static_eval_after - static_eval_before).abs();
-        if difference as f64 >= position_score && difference >= best_material_gain {
-          best_move = chess_move;
-          best_material_gain = difference;
-        }
+    total_material_won += static_eval_after as f64;
+
+    if color == chess::Color::White && total_material_won >= win_material_threshold {
+      last_winning_move = chess_move;
+    }
+    if color == chess::Color::Black && total_material_won <= -win_material_threshold {
+      last_winning_move = chess_move;
     }
     best_moves.push(chess_move);
   }
 
-  (best_move, best_moves)
+  (last_winning_move, best_moves)
 }
 
 pub fn find_tactical_positions(moves: &[String], engine: &mut Child) -> Vec<Puzzle> {
@@ -218,15 +229,19 @@ pub fn find_tactical_positions(moves: &[String], engine: &mut Child) -> Vec<Puzz
         let puzzle_start_pos = board.to_string();
         let puzzle_moves : Vec<String> = puzzle_variation.1.iter().map(|m| m.to_string()).collect();
 
+        // todo cut off puzzle_moves at last winning move?
+
         let task = if colour_to_play == chess::Color::White { "White to win material" } else { "Black to win material" };
 
         println!("Found tactical puzzle: {}, {}", puzzle_start_pos.to_string(), puzzle_moves.join(" "));
+        println!("Last material winning move: {}", puzzle_variation.0.to_string());
 
         let puzzle : Puzzle = Puzzle {
           puzzle_idx: 0,
           game_idx: 0,
           start_pos: puzzle_start_pos,
           moves: puzzle_moves,
+          end_move: puzzle_variation.0.to_string(),
           task: task.to_string(),
           mate_in: -1
         };
@@ -248,11 +263,14 @@ pub fn find_tactical_positions(moves: &[String], engine: &mut Child) -> Vec<Puzz
 
           println!("Player missed mate, found puzzle: {}, {}", start_pos.to_string(), moves.join(" "));
 
+          // TODO discard mate_in puzzles > max_puzzle_length
+
           let puzzle : Puzzle = Puzzle {
             puzzle_idx: 0,
             game_idx: 0,
             start_pos,
-            moves: moves,
+            moves: moves.clone(),
+            end_move: moves.last().unwrap().to_string(),
             task: task.to_string(),
             mate_in: prev_eval.mate_in
           };
