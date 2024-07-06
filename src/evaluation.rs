@@ -43,56 +43,56 @@ fn evaluate_position(fen: &str, engine: &mut Child) -> Vec<Evaluation> {
   let mut eval_idx: usize = 0;
   
   let reader = BufReader::new(stdout);
-    let mut evaluation = 0.0;
-    for line in reader.lines() {
-      let line = line.expect("Failed to read line");
-      if line.starts_with("bestmove") {
-        break;
-      }
-      if line.contains(&("info depth ".to_string() + &depth.to_string())) {
-        if evaluations.len() < eval_idx + 1 {
-          evaluations.push(Evaluation {
-            score: 0.0,
-            pv: Vec::new(),
-            mate_in: -1
-          });
-        }
-
-        if line.contains(" pv ") {
-          let pv = line.split(" pv ").nth(1).unwrap();
-          evaluations[eval_idx].pv = pv.split_whitespace().map(|s| s.to_string()).collect();
-        }
-
-        if line.contains("score cp") {
-          let score: i32 = line.split("score cp")
-                                .nth(1)
-                                .unwrap()
-                                .split_whitespace()
-                                .next()
-                                .unwrap()
-                                .parse()
-                                .unwrap();
-          evaluation = score as f64 / 100.0;
-          evaluations[eval_idx].score = evaluation;
-        }
-        if line.contains("score mate") {
-          let mate_in: i32 = line.split("score mate")
-                                .nth(1)
-                                .unwrap()
-                                .split_whitespace()
-                                .next()
-                                .unwrap()
-                                .parse()
-                                .unwrap();
-          
-          // no need to give an eval, our algo will pick up the mate_in value
-          evaluations[eval_idx].score = 0.0;
-          evaluations[eval_idx].mate_in = mate_in;
-        }
-
-        eval_idx += 1;
-      }
+  let mut evaluation = 0.0;
+  for line in reader.lines() {
+    let line = line.expect("Failed to read line");
+    if line.starts_with("bestmove") {
+      break;
     }
+    if line.contains(&("info depth ".to_string() + &depth.to_string())) {
+      if evaluations.len() < eval_idx + 1 {
+        evaluations.push(Evaluation {
+          score: 0.0,
+          pv: Vec::new(),
+          mate_in: -1
+        });
+      }
+
+      if line.contains(" pv ") {
+        let pv = line.split(" pv ").nth(1).unwrap();
+        evaluations[eval_idx].pv = pv.split_whitespace().map(|s| s.to_string()).collect();
+      }
+
+      if line.contains("score cp") {
+        let score: i32 = line.split("score cp")
+                              .nth(1)
+                              .unwrap()
+                              .split_whitespace()
+                              .next()
+                              .unwrap()
+                              .parse()
+                              .unwrap();
+        evaluation = score as f64 / 100.0;
+        evaluations[eval_idx].score = evaluation;
+      }
+      if line.contains("score mate") {
+        let mate_in: i32 = line.split("score mate")
+                              .nth(1)
+                              .unwrap()
+                              .split_whitespace()
+                              .next()
+                              .unwrap()
+                              .parse()
+                              .unwrap();
+        
+        // no need to give an eval, our algo will pick up the mate_in value
+        evaluations[eval_idx].score = 0.0;
+        evaluations[eval_idx].mate_in = mate_in;
+      }
+
+      eval_idx += 1;
+    }
+  }
   return evaluations;
 }
 
@@ -175,11 +175,16 @@ pub fn find_tactical_positions(moves: &[String], engine: &mut Child) -> Vec<Puzz
     }
 
     let chess_move = ChessMove::from_san(&board, &mv).unwrap();
-    let fen_before = board.to_string();
     board = board.make_move_new(chess_move);
     let fen_after = board.to_string();
 
     let evals_after = evaluate_position(&fen_after, engine);
+
+    // * can happen when there is no best move https://github.com/official-stockfish/Stockfish/discussions/5075
+    if evals_after.len() == 0 {
+      println!("No evaluation found for move: {} at fen {}", mv, fen_after);
+      continue;
+    }
 
     let tactical_move_threshold = 2.5; // about the value of a piece in centipawns
 
