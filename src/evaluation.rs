@@ -3,7 +3,7 @@ mod utils;
 use crate::structs::{Evaluation, Puzzle};
 use std::{env,  process::{Child, Command, Stdio}, str::FromStr};
 use std::io::{Write, BufRead, BufReader};
-use chess::{Board, ChessMove};
+use chess::{Board, ChessMove, Square};
 
 pub fn start_stockfish() -> Child {
   // This function should start the Stockfish engine
@@ -172,6 +172,32 @@ pub fn find_tactical_positions(moves: &[String], engine: &mut Child) -> Vec<Puzz
     // if the move is a mate, it will crash stockfish
     if mv.contains("#") {
       break;
+    }
+
+    // find the en passant square
+    let en_passant : Option<Square> = board.en_passant();
+
+    // ! en passant moves will crash the library
+    // https://github.com/jordanbray/chess/issues/54
+    if en_passant.is_some() {
+      let backward_move : Option<Square> = en_passant.unwrap().forward(board.side_to_move());
+
+      // ! should work with both colours! https://docs.rs/chess/latest/chess/struct.Square.html#method.backward
+      if (backward_move.is_some()) {
+
+        let backward_move_str = backward_move.unwrap().to_string();
+        println!("Backward to en passant square: {}", backward_move_str);
+        
+        // * if the move takes the backward square, append " e.p."
+        // * split mvoe at x
+        let mv_parts : Vec<&str> = mv.split("x").collect();
+        if (mv_parts.len() > 1) {
+          let last_part = mv_parts.last().unwrap();
+          if last_part.contains(&backward_move_str) {
+            mv.push_str(" e.p.");
+          }
+        }
+      }
     }
 
     let chess_move = ChessMove::from_san(&board, &mv).unwrap();

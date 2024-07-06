@@ -42,7 +42,7 @@ fn main() -> std::io::Result<()> {
   // run the engine
   let mut engine = evaluation::start_stockfish();
 
-  let start_at = 129;
+  let start_at = 231;
   let end_at = 400;
 
   let mut game_idx = 0;
@@ -101,13 +101,6 @@ fn main() -> std::io::Result<()> {
 
     game_idx += 1;
   }
-
-
-
-
-
-
-
 
   // close the engine
   engine.kill().expect("Failed to kill Stockfish");
