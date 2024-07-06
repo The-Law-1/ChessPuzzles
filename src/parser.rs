@@ -9,6 +9,7 @@ pub fn parse_csv_games(path: &str) -> Vec<GameInfo> {
   let mut index = 0;
   for result in rdr.records() {
     let record = result.expect("Failed to parse record");
+    // println!("{:?}", record);
     let game = GameInfo {
       id: index,
       name: record[0].to_string(),

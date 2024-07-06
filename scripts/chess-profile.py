@@ -16,17 +16,21 @@ def parse_pgn(pgn):
   
   if (pgn == ""):
     return "", "", "", "", "", ""
-  
+
   try:
     # split the pgn into lines
     lines = pgn.split("\n")
     
-    white = lines[4].split('"')[1]
-    black = lines[5].split('"')[1]
+    white = re.search(r'\[White "(.*?)"\]', pgn).group(1)
+    black = re.search(r'\[Black "(.*?)"\]', pgn).group(1)
     
-    end_date = lines[12].split('"')[1]
-    rating_white = lines[13].split('"')[1] 
-    rating_black = lines[14].split('"')[1]
+    # [UTCDate]
+    date = re.search(r'\[UTCDate "(.*?)"\]', pgn).group(1)
+    
+    # WhiteElo
+    rating_white = re.search(r'\[WhiteElo "(.*?)"\]', pgn).group(1)
+    # BlackElo
+    rating_black = re.search(r'\[BlackElo "(.*?)"\]', pgn).group(1)
     
     moves = lines[-1]
     
@@ -35,7 +39,7 @@ def parse_pgn(pgn):
     moves = re.sub(r'\d+\.\.\.', '', moves)
     # some whitespace remains, but it's not a big deal
     
-    return white, black, end_date, rating_white, rating_black, moves
+    return white, black, date, rating_white, rating_black, moves
 
   except Exception as e:
     print(f"Error parsing pgn {e}")
@@ -86,7 +90,7 @@ if response.status_code == 200:
          
           print(f"Played: {len(pgns)}")
           for pgn in pgns:
-            white, black, end_date, rating_white, rating_black, moves = parse_pgn(pgn)
+            white, black, date, rating_white, rating_black, moves = parse_pgn(pgn)
             if (white == ""):
               continue
 
@@ -94,7 +98,7 @@ if response.status_code == 200:
             # {[%clk 0:09:01.9]}
             moves = re.sub(r'\{.*?\}', '', moves)            
             my_games_file.write(
-              f"{white} vs {black},{white},{black},{rating_white},{rating_black},_,_,_,_,_,{end_date},_,_,_,_,_,_,_,_,{moves}\n"
+              f"{white} vs {black},{white},{black},{rating_white},{rating_black},_,_,_,_,_,{date},_,_,_,_,_,_,_,_,{moves}\n"
             )
         month += 1
         if month > 12:

@@ -24,13 +24,13 @@ fn parse_pgn(pgn: &str) -> Vec<String> {
 fn main() -> std::io::Result<()> {
   dotenv::dotenv().ok();
 
-  let games_data : Vec<structs::GameInfo> = parser::parse_csv_games("./chess-games/data/2016_CvC.csv");
+  let games_data : Vec<structs::GameInfo> = parser::parse_csv_games("./scripts/The_Lawx_games.csv");
 
   // run the engine
   let mut engine = evaluation::start_stockfish();
 
-  let start_at = 10;
-  let max_games = 10;
+  let start_at = 0;
+  let max_games = 100;
 
   let mut game_idx = 0;
 
