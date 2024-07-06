@@ -255,7 +255,7 @@ pub fn find_tactical_positions(moves: &[String], engine: &mut Child) -> Vec<Puzz
       if eval_after.mate_in > 0 && eval_after.mate_in <= max_mate_depth as i32 {
         let move_coords = utils::chess_move_to_coordinate_notation(&chess_move);
 
-        if prev_eval.pv[0] != move_coords {
+        if eval_after.pv[0] != move_coords {
           // let startPos = fen_before;
           let start_pos = fen_after.clone();
           let moves = eval_after.pv.clone();
@@ -271,7 +271,7 @@ pub fn find_tactical_positions(moves: &[String], engine: &mut Child) -> Vec<Puzz
             moves: moves.clone(),
             end_move: moves.last().unwrap().to_string(),
             task: task.to_string(),
-            mate_in: prev_eval.mate_in
+            mate_in: eval_after.mate_in
           };
 
           puzzles.push(puzzle);
