@@ -146,6 +146,11 @@ pub fn find_tactical_positions(moves: &[String], engine: &mut Child) -> Vec<Puzz
 
     let mv = mv.replace("=", ""); // Remove the '=' sign from pawn promotions
 
+    // if it's the game's result, break
+    if mv == "1-0" || mv == "0-1" || mv == "1/2-1/2" {
+      break;
+    }
+
     let chess_move = ChessMove::from_san(&board, &mv).unwrap();
     let fen_before = board.to_string();
     board = board.make_move_new(chess_move);
