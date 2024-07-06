@@ -194,7 +194,8 @@ pub fn find_tactical_positions(moves: &[String], engine: &mut Child) -> Vec<Puzz
     }
 
     // * if the move is not tactical, skip it
-    if is_tactical_move == false {
+    // ! weird that pv would be empty, but we've had errors
+    if is_tactical_move == false || evals_after[0].pv.is_empty() {
       prev_eval = Evaluation{
         score: evals_after[0].score,
         pv: evals_after[0].pv.clone(), // Clone the vector to avoid moving it
@@ -210,7 +211,7 @@ pub fn find_tactical_positions(moves: &[String], engine: &mut Child) -> Vec<Puzz
 
     // println!("Was best move the only winning move: {}", only_winning_move);
 
-    if only_winning_move {
+    if only_winning_move{
       let eval_after = &evals_after[0];
       println!("Only winning move detected: {}", eval_after.pv[0]);
 
