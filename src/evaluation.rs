@@ -145,6 +145,8 @@ pub fn find_tactical_positions(moves: &[String], engine: &mut Child) -> Vec<Puzz
     println!("Analyzing move: {}", mv);
     // TODO move forward to skip opening moves
 
+    let mv = mv.replace("=", ""); // Remove the '=' sign from pawn promotions
+
     let chess_move = ChessMove::from_san(&board, &mv).unwrap();
     let fen_before = board.to_string();
     board = board.make_move_new(chess_move);

@@ -33,14 +33,14 @@ fn main() -> std::io::Result<()> {
   // run the engine
   let mut engine = evaluation::start_stockfish();
 
-  let start_at = 1;
+  let start_at = 0;
   let max_games = 10;
 
   let mut game_idx = 0;
 
   for game in games_data.iter() {
     if game_idx < start_at {
-      println!("Game already parsed, skipping\n");
+      println!("Game already parsed, skipping");
       game_idx += 1;
       continue;
     }
@@ -48,9 +48,9 @@ fn main() -> std::io::Result<()> {
     if game.id >= max_games {
       break;
     }
-    print!("Game: {}\n", game.name);
+    println!("Game: {}\n Number: {}", game.name, game_idx);
 
-    print!("Testing game data: {}\n", game.name);
+    println!("Testing game data: {}", game.name);
 
     let moves: Vec<String> = parse_pgn(game.moves.as_str());
 

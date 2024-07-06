@@ -64,8 +64,9 @@ pub fn is_only_winning_move(evals : &Vec<Evaluation>, winning_move_threshold : f
 
   // loop through the rest of the evaluations
   for eval in evals.iter().skip(1) {
-    // if one of them is a mate or another technical move, others_losing is false
-    if eval.score.abs() >= winning_move_threshold || eval.mate_in == evals[0].mate_in {
+    // if one of them is a mate or another technical move, others_losing is false    
+    if eval.score.abs() >= winning_move_threshold || (evals[0].mate_in != -1 && eval.mate_in == evals[0].mate_in) {
+      println!("Failed because of: {} or {}", eval.score, eval.mate_in);
       others_losing = false;
     }
   }
