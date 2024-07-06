@@ -165,6 +165,11 @@ pub fn find_tactical_positions(moves: &[String], engine: &mut Child) -> Vec<Puzz
       break;
     }
 
+    // if the move is a mate, it will crash stockfish
+    if mv.contains("#") {
+      break;
+    }
+
     let chess_move = ChessMove::from_san(&board, &mv).unwrap();
     let fen_before = board.to_string();
     board = board.make_move_new(chess_move);
