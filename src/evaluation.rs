@@ -105,7 +105,10 @@ fn explore_variation(start_pos: &String, moves: &Vec<String>, color: chess::Colo
   let opposing_color = if color == chess::Color::White { chess::Color::Black } else { chess::Color::White };
 
   for mv in moves {
-    if (best_moves.len() as i16) >= max_depth { break; }
+    if (best_moves.len() as i16) >= max_depth {
+      best_move = ChessMove::default();
+      return (best_move, Vec::new());
+    }
 
     let static_eval_before = utils::material_points(&board, opposing_color);
     let chess_move = utils::convert_to_san(mv);
@@ -160,26 +163,57 @@ pub fn find_tactical_positions(moves: &[String], engine: &mut Child) -> Vec<Puzz
 
     let tactical_move_threshold = 2.5; // about the value of a piece in centipawns
 
+    let mut is_tactical_move = false;
+
+    // * if this position swung the score by more than 2.5 centipawns, it's a tactical move
+    if (prev_eval.score - evals_after[0].score).abs() > tactical_move_threshold {
+      println!("Tactical move detected: {}", mv);
+      is_tactical_move = true;
+    }
+
+    // * or if a forced mate is detected now and the previous move was not a mate
+    if evals_after[0].mate_in > 0 && prev_eval.mate_in == -1 {
+      println!("Mate in detected: {}", mv);
+      is_tactical_move = true;
+    }
+
+    // * if the move is not tactical, skip it
+    if is_tactical_move == false {
+      prev_eval = Evaluation{
+        score: evals_after[0].score,
+        pv: evals_after[0].pv.clone(), // Clone the vector to avoid moving it
+        mate_in: evals_after[0].mate_in
+      }; // Store the current evaluation for the next iteration
+      continue;
+    }
 
     let colour_to_play = board.side_to_move();
 
     // check the final evaluation of the position, is the only one that matters
-    let only_winning_move = utils::is_only_winning_move(&evals_after, tactical_move_threshold, fen_after.clone());
+    let only_winning_move = utils::is_only_winning_move(&evals_after, fen_after.clone());
 
     // println!("Was best move the only winning move: {}", only_winning_move);
 
     if only_winning_move {
       let eval_after = &evals_after[0];
+      println!("Only winning move detected: {}", eval_after.pv[0]);
 
       // TODO check if the move was missed by the player, to eliminate trivial puzzles
 
 
-      // if the previous eval is already high, one side is winning, we don't need to check
-      if prev_eval.score.abs() < tactical_move_threshold && (eval_after.score - prev_eval.score).abs() > tactical_move_threshold {
-
+      // * if the evaluation is positive, it means we can win material
+      if eval_after.score > 0.0 {
         
+        let max_puzzle_length = 5;
         // look for a sequence of moves that lead to (the biggest) material gain about equal to the evaluation
-        let puzzle_variation = explore_variation(&fen_after, &eval_after.pv, colour_to_play, eval_after.score, 5);
+        // * while staying under the max depth
+        let puzzle_variation = explore_variation(&fen_after, &eval_after.pv, colour_to_play, eval_after.score, max_puzzle_length);
+
+        // * likely our engine found a position-improving sequence but not a clear material-winning move
+        if puzzle_variation.0 == ChessMove::default() && puzzle_variation.1.len() == 0 {
+          println!("No clear material-winning move found, skipping puzzle");
+          continue;
+        }
 
         let puzzle_start_pos = board.to_string();
         let puzzle_moves : Vec<String> = puzzle_variation.1.iter().map(|m| m.to_string()).collect();
@@ -201,7 +235,8 @@ pub fn find_tactical_positions(moves: &[String], engine: &mut Child) -> Vec<Puzz
         puzzles.push(puzzle);
       }
 
-      if prev_eval.mate_in > 0 && prev_eval.mate_in <= 7 {
+      // * if instead we have a positive mate, we can force a mate
+      if eval_after.mate_in > 0 {
         let move_coords = utils::chess_move_to_coordinate_notation(&chess_move);
 
         if prev_eval.pv[0] != move_coords {
@@ -211,7 +246,7 @@ pub fn find_tactical_positions(moves: &[String], engine: &mut Child) -> Vec<Puzz
 
           let task = if colour_to_play == chess::Color::White { "White to force mate" } else { "Black to force mate" };
 
-          println!("Found mate puzzle: {}, {}", start_pos.to_string(), moves.join(" "));
+          println!("Player missed mate, found puzzle: {}, {}", start_pos.to_string(), moves.join(" "));
 
           let puzzle : Puzzle = Puzzle {
             puzzle_idx: 0,
@@ -223,7 +258,6 @@ pub fn find_tactical_positions(moves: &[String], engine: &mut Child) -> Vec<Puzz
           };
 
           puzzles.push(puzzle);
-          println!("Missed mate in in {}\n", prev_eval.mate_in);
         }
       }
 

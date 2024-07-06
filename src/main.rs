@@ -37,7 +37,7 @@ fn main() -> std::io::Result<()> {
   let mut engine = evaluation::start_stockfish();
 
   let start_at = 0;
-  let max_games = 100;
+  let max_games = 1;
 
   let mut game_idx = 0;
 

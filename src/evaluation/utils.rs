@@ -49,18 +49,12 @@ pub fn convert_to_san(move_str: &str) -> ChessMove {
   return chess_move;
 }
 
-pub fn is_only_winning_move(evals : &Vec<Evaluation>, winning_move_threshold : f64, current_fen : String) -> bool {
-  let mut is_winning = false;
-  let mut others_losing = false;
-
-  // println!("Score for best move: {}", evals[0].score);
+// * we can assume since we check for tactical moves, that the best move is a winning move
+pub fn is_only_winning_move(evals : &Vec<Evaluation>, current_fen : String) -> bool {
+  let mut others_losing = true; // ! not a great coding pattern
+ 
   if evals.len() == 0 {
-    return false;
-  }
-
-  if evals[0].score.abs() >= winning_move_threshold || evals[0].mate_in > 0 {
-    is_winning = true;
-  } else {
+    println!("No evaluations found");
     return false;
   }
 
@@ -71,7 +65,7 @@ pub fn is_only_winning_move(evals : &Vec<Evaluation>, winning_move_threshold : f
     // consider it way worse, if it's 1 whole pawn worse
     let score_diff = (evals[0].score - eval.score).abs();
     
-    // if one of them is a mate or another technical move, others_losing is false    
+    // if one of them is a mate or another technical move, others_losing is false
     if score_diff < less_winning_threshold || (evals[0].mate_in != -1 && eval.mate_in == evals[0].mate_in) {
       println!("Current fen: {}", current_fen);
       println!("Failed because of: {} or {}", eval.score, eval.mate_in);
@@ -80,7 +74,7 @@ pub fn is_only_winning_move(evals : &Vec<Evaluation>, winning_move_threshold : f
     }
   }
 
-  return is_winning && others_losing;
+  return others_losing;
 }
 
 pub fn chess_move_to_coordinate_notation(chess_move: &ChessMove) -> String {
