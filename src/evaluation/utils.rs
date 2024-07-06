@@ -67,7 +67,7 @@ pub fn is_only_winning_move(evals : &Vec<Evaluation>, winning_move_threshold : f
   // loop through the rest of the evaluations
   for eval in evals.iter().skip(1) {
 
-    let less_winning_threshold = 1.0;
+    let less_winning_threshold = 0.5;
     // consider it way worse, if it's 1 whole pawn worse
     let score_diff = (evals[0].score - eval.score).abs();
     

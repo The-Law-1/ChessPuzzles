@@ -3,7 +3,9 @@ mod structs;
 mod parser;
 mod serialise;
 
+use std::fs::File;
 use std::{fs::OpenOptions, io::Write};
+use std::panic;
 
 use dotenv;
 
@@ -23,6 +25,11 @@ fn parse_pgn(pgn: &str) -> Vec<String> {
 
 fn main() -> std::io::Result<()> {
   dotenv::dotenv().ok();
+
+  panic::set_hook(Box::new(|panic_info| {
+      let mut err_file = File::create("error.txt").expect("Unable to create file");
+      write!(err_file, "Error: {}", panic_info).expect("Unable to write to file");
+  }));
 
   let games_data : Vec<structs::GameInfo> = parser::parse_csv_games("./scripts/The_Lawx_games.csv");
 
