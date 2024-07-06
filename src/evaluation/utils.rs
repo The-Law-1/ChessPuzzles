@@ -54,6 +54,9 @@ pub fn is_only_winning_move(evals : &Vec<Evaluation>, winning_move_threshold : f
   let mut others_losing = false;
 
   // println!("Score for best move: {}", evals[0].score);
+  if evals.len() == 0 {
+    return false;
+  }
 
   if evals[0].score.abs() >= winning_move_threshold || evals[0].mate_in > 0 {
     is_winning = true;

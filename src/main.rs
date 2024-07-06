@@ -30,10 +30,6 @@ fn main() -> std::io::Result<()> {
     .write(true)
     .open("./chess-games/data/2016_CvC.csv")?;
 
-  // get the number of lines in the parsed_game_files
-  let parsed_games = std::fs::read_to_string("parsed-games.txt")?;
-  let parsed_games_count = parsed_games.lines().count();
-
   // run the engine
   let mut engine = evaluation::start_stockfish();
 
