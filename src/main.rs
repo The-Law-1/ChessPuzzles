@@ -84,6 +84,20 @@ fn main() -> std::io::Result<()> {
     game_idx += 1;
   }
 
+
+  // write what games you analyzed
+  let mut parsed_games_file = OpenOptions::new()
+    .write(true)
+    .create(true)
+    .open("parsed_games.csv")?;
+
+  let line = format!("{}, {}\n", start_at, game_idx);
+  if let Err(e) = parsed_games_file.write_fmt(format_args!("{}", line)){
+    eprintln!("Failed to write to file: {}", e);
+  }
+
+
+
   // close the engine
   engine.kill().expect("Failed to kill Stockfish");
   println!("Closed stockfish\n");

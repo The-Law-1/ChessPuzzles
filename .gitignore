@@ -4,3 +4,4 @@ chess-games
 .env
 output.csv
 scripts/*.csv
+parsed_games.csv
