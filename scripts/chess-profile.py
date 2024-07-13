@@ -4,6 +4,7 @@ import requests
 from sys import argv
 from datetime import datetime
 import re
+import os
 
 username = argv[1]
 profile_endpoint = f"https://api.chess.com/pub/player/{username}"
@@ -49,8 +50,8 @@ def parse_pgn(pgn):
 # https://www.chess.com/news/view/published-data-api#pubapi-endpoint-player
 # fetch player endpoint
 headers = {
-    "User-Agent": "gabrielkgriffin@gmail.com",
-    "email": "gabrielkgriffin@gmail.com",
+    "User-Agent": os.environ.get("EMAIL", ""),
+    "email": os.environ.get("EMAIL", ""),
     "Content-Type": "application/json",
 }
 
